@@ -1,0 +1,9 @@
+<Solution>
+  <Configurations>
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Project Path="APCInjection/APCInjection.vcxproj" Id="ac14ba80-edab-485b-ada1-b220328f8277" />
+  <Project Path="EarlyBirdAPCInjection/EarlyBirdAPCInjection.vcxproj" Id="a9525d7c-5ef6-4068-b23b-8a86e42ae792" />
+  <Project Path="Shellcode_encoder/Shellcode_encoder.vcxproj" Id="89a23c2b-9cfa-40ee-b2c4-07abb439b301" />
+</Solution>

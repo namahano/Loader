@@ -1,0 +1,120 @@
+## ============================================
+## Visual Studio - Build output
+## ============================================
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+[Ww][Ii][Nn]32/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+
+## ============================================
+## Visual Studio user-specific files
+## ============================================
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.userprefs
+
+## VS Code
+.vscode/
+*.code-workspace
+
+## ============================================
+## Build artifacts
+## ============================================
+*.obj
+*.pdb
+*.idb
+*.ilk
+*.exp
+*.lib
+*.iobj
+*.ipdb
+*.tlog
+*.lastbuildstate
+*.recipe
+*.vcxproj.FileListAbsolute.txt
+*.aps
+*.ncb
+*.opensdf
+*.sdf
+*.cachefile
+*.VC.db
+*.VC.VC.opendb
+
+## ============================================
+## NuGet
+## ============================================
+*.nupkg
+*.snupkg
+**/[Pp]ackages/*
+!**/[Pp]ackages/build/
+*.nuget.props
+*.nuget.targets
+
+## ============================================
+## ReSharper / Rider
+## ============================================
+_ReSharper*/
+*.[Rr]e[Ss]harper
+*.DotSettings.user
+.idea/
+
+## ============================================
+## Testing
+## ============================================
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+*.VisualState.xml
+TestResult.xml
+nunit-*.xml
+
+## ============================================
+## OS
+## ============================================
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+.DS_Store
+
+## ============================================
+## ローダー開発 - OPSEC注意
+## ============================================
+# 暗号化キー・エンコード済みペイロード（絶対にpushしない）
+key.h
+*.key
+cache.bin
+*.bin
+shellcode.h
+payload.h
+
+# 生のシェルコード・raw payload
+*.raw
+*.sc
+*.bin
+
+# 検証用バイナリ
+ThreatCheck*.exe
+*.dmp
+
+# 個人メモ・検知ログ
+notes.md
+detection_*.txt
+crowdstrike_*.log
+defender_*.log
+TODO.local.md
+
+# 環境固有設定
+local.config
+*.local.h
