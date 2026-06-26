@@ -27,28 +27,14 @@ PBYTE LoadShellcode(IN LPCWSTR lpPath, OUT PDWORD lpdwSize) {
 	DWORD         dwByteRead = 0;
 	LARGE_INTEGER liFileSize = { 0 };
 
-	//シェルコードを開く
-	hFile = CreateFileW(
-		lpPath,                //ファイルパス
-		GENERIC_READ,          //読み取り専用
-		FILE_SHARE_READ,       //他プロセスからの読み取りを許可
-		NULL,                  //ACL,ハンドル継承必要なし
-		OPEN_EXISTING,         //既存のファイルのみを開く
-		FILE_ATTRIBUTE_NORMAL, //通常のファイル属性
-		NULL                   //新規のファイル作成ではないためNULL
-	);
+	hFile = CreateFileW(lpPath, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 
 	if (hFile == INVALID_HANDLE_VALUE) {
 		DBG("[-] CreateFileW failed: %lu\n", GetLastError());
 		goto _EndOfFunc;
 	}
 
-	//シェルコードのサイズを取得
-	if (!GetFileSizeEx(
-		hFile,      //対象ファイルのハンドル
-		&liFileSize //サイズを受け取るバッファ
-	))
-	{
+	if (!GetFileSizeEx(hFile, &liFileSize))	{
 		DBG("[-] GetFileSizeEx failed: %lu\n", GetLastError());
 		goto _EndOfFunc;
 	}
@@ -60,24 +46,14 @@ PBYTE LoadShellcode(IN LPCWSTR lpPath, OUT PDWORD lpdwSize) {
 
 	dwSize = (DWORD)liFileSize.QuadPart;
 
-	//シェルコードのバイト数だけメモリ確保
-	pbBuffer = (PBYTE)HeapAlloc(
-		GetProcessHeap(),  //デフォルトヒープのハンドル
-		0,                 //デフォルト動作
-		dwSize);           //シェルコードの長さだけ確保
+
+	pbBuffer = (PBYTE)HeapAlloc(GetProcessHeap(), 0, dwSize);
 	if (pbBuffer == NULL) {
 		DBG("[-] HeapAlloc failed\n");
 		goto _EndOfFunc;
 	}
 
-	//シェルコードを読み込んでpbBufferに書き込み
-	if (!ReadFile(
-		hFile,       //ファイルのハンドル
-		pbBuffer,    //読み込み先バッファ
-		dwSize,      //読み込む最大バイト数
-		&dwByteRead, //実際に読み込まれたバイト数
-		NULL         //非同期IO不使用
-	) || dwByteRead != dwSize) {
+	if (!ReadFile(hFile, pbBuffer, dwSize, &dwByteRead, NULL) || dwByteRead != dwSize) {
 		DBG("[-] ReadFile failed: %lu (read=%lu, expected=%lu)\n", GetLastError(), dwByteRead, dwSize);
 		HeapFree(GetProcessHeap(), 0, pbBuffer);
 		pbBuffer = NULL;
