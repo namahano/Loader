@@ -152,31 +152,23 @@ BOOL ResolveSection(IN PVOID pPE, IN LPCSTR lpSectionName, OUT PVOID* ppSection,
 		goto _EndOfFunc;
 	}
 
-	// 2. pPE を PIMAGE_DOS_HEADER にキャストして DOS ヘッダとして扱う
 	pImgDosHdr = (PIMAGE_DOS_HEADER)pPE;
 
-	// 3. (オプション) DOS シグネチャ "MZ" を検証
 	if (pImgDosHdr->e_magic != IMAGE_DOS_SIGNATURE) {
 		goto _EndOfFunc;
 	}
 
-	// 4. e_lfanew を読んで NT ヘッダの位置を計算
 	pImgNtHdr = (PIMAGE_NT_HEADERS)((PBYTE)pImgDosHdr + pImgDosHdr->e_lfanew);
 
-	// 5. (オプション) NT シグネチャ "PE\0\0" を検証
 	if (pImgNtHdr->Signature != IMAGE_NT_SIGNATURE) {
 		goto _EndOfFunc;
 	}
 
-	// 6. NumberOfSections からセクション数を取得
 	wNumberOfSections = pImgNtHdr->FileHeader.NumberOfSections;
 
-	// 7. IMAGE_FIRST_SECTION  を使ってセクションヘッダ配列の先頭を取得
 	pImgSectionHdr = IMAGE_FIRST_SECTION(pImgNtHdr);
 
-	// 8. ループでセクションを巡回し、名前が ".text" のものを探す
 	for (wIndex = 0; wIndex < wNumberOfSections; wIndex++) {
-		// 9. 見つかったら出力引数に書き込んで TRUE を返す
 		if (!strncmp((char*)pImgSectionHdr[wIndex].Name, lpSectionName, IMAGE_SIZEOF_SHORT_NAME)) {
 			*ppSection = (PBYTE)pPE + pImgSectionHdr[wIndex].VirtualAddress;
 			*psSize = pImgSectionHdr[wIndex].Misc.VirtualSize;
