@@ -75,6 +75,78 @@ _EndOfFunc:
 	return pbBuffer;
 }
 
+NTSTATUS LoadDllFile(IN LPCWSTR lpDllName, OUT PVOID* ppModuleBase, OUT PSIZE_T pMapSize) {
+
+    WCHAR                lpDllPath[MAX_PATH] = { 0 };
+    WCHAR                lpSysDir[MAX_PATH] = { 0 };
+
+    HMODULE              hNtdll = NULL;
+    fnNtMapViewOfSection NtMapViewOfSection = NULL;
+    fnNtCreateSection    NtCreateSection = NULL;
+
+    HANDLE               hFile = INVALID_HANDLE_VALUE;
+    HANDLE               hSection = NULL;
+
+    PVOID                pBase = NULL;
+    SIZE_T               sViewSize = 0;
+
+    NTSTATUS             status = STATUS_UNSUCCESSFUL;
+
+    hNtdll = GetModuleHandleW(L"ntdll.dll");
+    if (hNtdll == NULL) {
+        status = STATUS_DLL_NOT_FOUND;
+        goto _EndOfFunc;
+    }
+
+    NtCreateSection = (fnNtCreateSection)GetProcAddress(hNtdll, "NtCreateSection");
+    if (!NtCreateSection) {
+        status = STATUS_PROCEDURE_NOT_FOUND;
+        goto _EndOfFunc;
+    }
+
+    NtMapViewOfSection = (fnNtMapViewOfSection)GetProcAddress(hNtdll, "NtMapViewOfSection");
+    if (!NtMapViewOfSection) {
+        status = STATUS_PROCEDURE_NOT_FOUND;
+        goto _EndOfFunc;
+    }
+
+    GetSystemDirectoryW(lpSysDir, MAX_PATH);
+    swprintf_s(lpDllPath, MAX_PATH, L"%s\\%s", lpSysDir, lpDllName);
+
+    hFile = CreateFileW(lpDllPath, GENERIC_READ | SYNCHRONIZE, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) {
+        DBG("CreateFileW failed error: %lu\n", GetLastError());
+        status = STATUS_UNSUCCESSFUL;
+        goto _EndOfFunc;
+    }
+
+    status = NtCreateSection(&hSection, SECTION_ALL_ACCESS, NULL, 0x00, PAGE_READONLY, SEC_IMAGE, hFile);
+    if (!NT_SUCCESS(status)) {
+        DBG("NtCreateSection failed error: %lu\n", GetLastError());
+        goto _EndOfFunc;
+    }
+
+    status = NtMapViewOfSection(hSection, GetCurrentProcess(), &pBase, 0, 0, NULL, &sViewSize, ViewUnmap, 0, PAGE_READWRITE);
+    if (!NT_SUCCESS(status)) {
+        DBG("NtMapViewOfSection failed error: %lu\n", GetLastError());
+        goto _EndOfFunc;
+    }
+
+    *ppModuleBase = pBase;
+    *pMapSize = sViewSize;
+
+    status = STATUS_SUCCESS;
+
+_EndOfFunc:
+    if (hSection != NULL) {
+        CloseHandle(hSection);
+    }
+    if (hFile != INVALID_HANDLE_VALUE) {
+        CloseHandle(hFile);
+    }
+    return status;
+}
+
 BOOL ResolveSection(IN PVOID pPE, IN LPCSTR lpSectionName, OUT PVOID* ppSection, OUT PSIZE_T psSize) {
 
     PIMAGE_DOS_HEADER     pImgDosHdr        = NULL;
@@ -160,77 +232,7 @@ _EndOfFunc:
 	return bSuccess;
 }
 
-NTSTATUS LoadDllFile(IN LPCWSTR lpDllName, OUT PVOID* ppModuleBase, OUT PSIZE_T pMapSize) {
 
-    WCHAR                lpDllPath[MAX_PATH] = { 0 };
-    WCHAR                lpSysDir[MAX_PATH] = { 0 };
-
-    HMODULE              hNtdll = NULL;
-    fnNtMapViewOfSection NtMapViewOfSection = NULL;
-    fnNtCreateSection    NtCreateSection = NULL;
-
-    HANDLE               hFile = INVALID_HANDLE_VALUE;
-    HANDLE               hSection = NULL;
-
-    PVOID                pBase = NULL;
-    SIZE_T               sViewSize = 0;
-
-    NTSTATUS             status = STATUS_UNSUCCESSFUL;
-
-    hNtdll = GetModuleHandleW(L"ntdll.dll");
-    if (hNtdll == NULL) {
-        status = STATUS_DLL_NOT_FOUND;
-        goto _EndOfFunc;
-    }
-
-    NtCreateSection = (fnNtCreateSection)GetProcAddress(hNtdll, "NtCreateSection");
-    if (!NtCreateSection) {
-        status = STATUS_PROCEDURE_NOT_FOUND;
-        goto _EndOfFunc;
-    }
-
-    NtMapViewOfSection = (fnNtMapViewOfSection)GetProcAddress(hNtdll, "NtMapViewOfSection");
-    if (!NtMapViewOfSection) {
-        status = STATUS_PROCEDURE_NOT_FOUND;
-        goto _EndOfFunc;
-    }
-
-    GetSystemDirectoryW(lpSysDir, MAX_PATH);
-    swprintf_s(lpDllPath, MAX_PATH, L"%s\\%s", lpSysDir, lpDllName);
-
-    hFile = CreateFileW(lpDllPath, GENERIC_READ | SYNCHRONIZE, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-    if (hFile == INVALID_HANDLE_VALUE) {
-        DBG("CreateFileW failed error: %lu\n", GetLastError());
-        status = STATUS_UNSUCCESSFUL;
-        goto _EndOfFunc;
-    }
-
-    status = NtCreateSection(&hSection, SECTION_ALL_ACCESS, NULL, 0x00, PAGE_READONLY, SEC_IMAGE, hFile);
-    if (!NT_SUCCESS(status)) {
-        DBG("NtCreateSection failed error: %lu\n", GetLastError());
-        goto _EndOfFunc;
-    }
-
-    status = NtMapViewOfSection(hSection, GetCurrentProcess(), &pBase, 0, 0, NULL, &sViewSize, ViewUnmap, 0, PAGE_READWRITE);
-    if (!NT_SUCCESS(status)) {
-        DBG("NtMapViewOfSection failed error: %lu\n", GetLastError());
-        goto _EndOfFunc;
-    }
-
-    *ppModuleBase = pBase;
-    *pMapSize = sViewSize;
-
-    status = STATUS_SUCCESS;
-
-_EndOfFunc:
-    if (hSection != NULL) {
-        CloseHandle(hSection);
-    }
-    if (hFile != INVALID_HANDLE_VALUE) {
-        CloseHandle(hFile);
-    }
-    return status;
-}
 
 int main(void) {
     
