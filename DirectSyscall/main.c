@@ -5,7 +5,7 @@ int main(void) {
 
 	int nExitCode = EXIT_FAILURE;
 
-
+	printf("Hello World\n");
 
 
 	nExitCode = EXIT_SUCCESS;
